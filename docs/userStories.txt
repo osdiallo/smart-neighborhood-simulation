@@ -1,0 +1,40 @@
+Epic: Neighborhood Simulation
+Language: Python
+
+User Story: As a user, I want to be able to change the time step of
+	my simulation without changing its run time so that I can efficiently
+	run different length simulations
+
+User Story: As a user, I want each house in the neighborhood to regularly
+	report information about temperature and energy usage at each timestep
+	so that I can make sure the information is being logged properly
+
+User Story: As a user, I want to specify how many houses are in my
+	neighborhood without having to specify the exact parameters of
+	each house so that I can quickly and easily set up different
+	simulations of my neighborhood
+
+User Story: As a user, I want to calculate the inside temperature and
+	electrical load of a house over the course of a specified time period
+	so that I can realistically simulate the operations of a real neighborhood
+
+User Story: As a user, I want to easily save the state of my simulation
+	at each time step so that I can resume interrupted simulations without
+	having to completely start over
+
+User Story: As a user, I want my simulations to keep a historical log of
+	each house’s information at each time step so that I can easily see how
+	a house’s information changes over time
+
+User Story: As a user, I want each house in my neighborhood to run asynchronously
+	so that the analysis and events of one house do not affect another
+
+User Story: As a user, I want to be able to view a graphical representation of
+	the artificial neighborhood
+
+User Story: As a user, I want this program and its features to be extensible so
+	that it can be used in and for other applications than the one it was 
+	originally developed for
+
+User Story: As a user, I want to be able to easily interact with a graphical
+	interface to adjust and run my simulations
