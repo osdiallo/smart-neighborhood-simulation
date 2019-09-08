@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<b>Neighborhood Simulation</b>
+		<p>
+	</head>
+	<body>
+		<form action='/world/params', method="post">
+			Number of Neighborhoods: <input type="number" name="num_ngh" min="1">
+			<br>
+			Number of Homes per Neighborhood: <input type="number" name="num_homes" min="1">
+			<br>
+
+			Minimum House Length: <input type="number" name="min_length" min="1">
+			<br>
+			Maximum House Length: <input type="number" name="max_length" max="100">
+			<br>
+			Minimum House Width: <input type="number" name="min_width" min="1">
+			<br>
+			Maximum House Width: <input type="number" name="max_width" max="100">
+			<br>
+
+			<select name="season">
+				<option value="spring">Spring</option>
+				<option value="summer">Summer</option>
+				<option value="fall">Fall</option>
+				<option value="winter">Winter</option>
+			</select>
+			<br>
+
+			<select name="weather">
+				<option value="sunny">Sunny</option>
+				<option value="cloudy">Cloudy</option>
+				<option value="raining">Raining</option>
+				<option value="snowing">Snowing</option>
+			</select>
+			
+			<br>
+			Simulation Run Time: <input type="number" name="run_time" min="1"> hours
+			<br>
+			Upper Temp Gradient: <input type="number" name="upper_t" max="100" value="80"> F
+			<br>
+			Lower Temp Gradient: <input type="number" name="lower_t" min="0" value="32"> F
+			<br>
+			<input type="submit">
+		</form>
+	</body>
+</html>

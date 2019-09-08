@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<style>
+			.neighborhoods {
+				width: 700px;
+			}
+
+			.info_container {
+				display: grid;
+				grid-template-columns: [label1] 1fr [content1] 100px [gap] 2% [label2] 1.5fr [content2] 0.5fr [label-end];
+				grid-template-rows: auto;
+				
+				grid-column-gap: 5px;
+				grid-row-gap: 5px;
+				padding: 10px;
+				width: 100%;
+				background-color: #2196F3;
+			}
+
+			.info_container > div {
+				background-color: rgba(255, 255, 255, 0.8);
+				padding: 2px 2px;
+				font-size: 15px;
+			}
+			
+			.label1 {
+				text-align: right;
+				grid-column-start: label1;
+			}
+			
+			.content1 {
+				text-align: left;
+				grid-column-start: content1;
+			}
+
+			.label2 {
+				text-align: right;
+				grid-column-start: label2;
+			}
+			
+			.content2 {
+				text-align: left;
+				grid-column-start: content2;
+			}
+
+			.temp_div {
+				grid-column-start: label2;
+				grid-column-end: label-end;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="neighborhoods">
+			<div class="info_container">
+				<div class="label1">Season: </div>
+				<div class="content1">{{world_info.season}}</div>
+				
+				<div class="label2">Number of Neighborhoods: </div>
+				<div class="content2">{{world_info.num_neighborhoods}}</div>
+				
+				<div class="label1">Weather: </div>
+				<div class="content1">{{world_info.weather}}</div>
+				
+				<div class="label2">Number of Houses per Neighborhood: </div>
+				<div class="content2">{{world_info.num_homes}}</div>
+				
+				<div class="label1">World Temperature: </div>
+				<div class="content1" id="world_temp">{{"{:.5f}".format(world_info.outside_temp.value)}}</div>
+
+				<div class="temp_div">
+					<input type="radio" id="celsius" name="temp" value="celsius" onclick="change_scale('celsius');" checked>
+					<label for="celsius">C</label>
+
+					<input type="radio" id="fahrenheit" name="temp" value="fahrenheit" onclick="change_scale('fahrenheit');">
+					<label for="fahrenheit">F</label>
+				</div>
+			</div>
+
+			<br><br>
+			
+				<table style="margin-left: 20px;">
+				<th>
+					<tr style="color: green; ">
+						<td class="step">
+							Step: 0
+						</td>
+
+						{%for i in range(0, world_info.num_homes)%}
+							<th>{{"House {}".format(i)}} </th>
+						{%endfor%}
+					</tr>
+				</th>
+
+				{%for i in range(0, world_info.num_neighborhoods)%}
+				<tr>
+					<td>{{"Neighborhood {}".format(i)}}</td>
+
+					{%for j in range(0, world_info.num_homes)%}
+					<td class="{{"{}-{}".format(i, j)}}" bgcolor="{{world_info.neighborhoods[i].homes[j].color_gradient()}}">
+						{{"{:.3f}".format(world_info.neighborhoods[i].homes[j].get_int_temp())}}
+					</td>
+					{%endfor%}
+				</tr>
+				{%endfor%}
+			</table>
+
+			<br>
+			<input id="back_ten" type="button" value="|<<" onclick="step_b_ten();"/>
+			<input id="back_one" type="button" value="<<" onclick="step_b_one();"/>
+			<input id="step_btn" type="button" value=">" onclick="pause(false);run_btn();" />
+			<input id="pause_btn" type="button" value="||" onclick="pause();" />
+			<input id="next_one" type="button" value=">>" onclick="step_f_one();"/>
+			<input id="next_ten" type="button" value=">>|" onclick="step_f_ten();"/>
+			<br>
+
+			<br>
+			<input type="range" min="0" max="0" id="step_slider" value="0" name="range"> 
+			<input type="current_step" id="num_steps" min="0" max="range.value" value="0" style="display: inline-block;">
+		</div>
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+		<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+		<script>
+			var pause_runtime = false;
+			var temp_scale = 'celsius';
+			var num_steps = {{world_info.num_steps}};
+			var count = 0;
+
+			function change_scale(mode){
+				temp_scale = mode;
+				stepInput = document.getElementById("num_steps");
+				
+				step_to(stepInput.value);
+			}
+
+			// proceeds the world to the next step, runs
+			// until the pause button is pressed
+			function world_step(steps = null, ctr = null){
+				if(steps == null && ctr == null) {
+					if(!pause_runtime){
+						if(count < num_steps){
+							setTimeout(function(){
+								$.getJSON('/st=/get_data/'+temp_scale, function(data){
+									parse_JSON(data);
+									increment_slider_max();
+								}).done(function(){
+									count++;	
+									world_step();
+								});
+							}, 0);
+						} else {
+							console.log("Exceeded run time");
+						}
+					}
+				} else {
+					if(ctr < steps && count < num_steps){
+						setTimeout(function(){
+							$.getJSON('/st=/get_data/'+temp_scale, function(data){
+								parse_JSON(data);
+								increment_slider_max();
+							}).done(function(){
+								count++;
+								ctr++;
+								world_step(steps, ctr);
+							});
+						}, 0);
+					}
+				}
+			}
+
+			function step_to(step_num){
+				console.log(count);
+				console.log(step_num);
+				
+				if(step_num > count){
+					step_num = count;
+				}
+
+				if(step_num < 0){
+					step_num = 0;
+				}
+				
+				$.getJSON('/st='+step_num+'/get_data/'+temp_scale, function(data){
+					parse_JSON(data);
+				});
+			}
+
+			// runs the world
+			function run_btn(){
+				var back_ten_btn = document.getElementById("back_ten");
+				var back_one_btn = document.getElementById("back_one");
+				var run_btn = document.getElementById("step_btn");
+				var next_one_btn = document.getElementById("next_one");
+				var next_ten_btn = document.getElementById("next_ten");
+			
+				back_ten.disabled = true;
+				back_one.disabled = true;
+				run_btn.disabled = true;
+				next_one.disabled = true;
+				next_ten.disabled = true;
+				world_step();
+			}
+			
+			function pause(mode){
+				if(typeof(mode) === 'undefined'){
+					pause_runtime = !pause_runtime;
+					
+					if(pause_runtime){
+						var back_ten_btn = document.getElementById("back_ten");
+						var back_one_btn = document.getElementById("back_one");
+						var run_btn = document.getElementById("step_btn");
+						var next_one_btn = document.getElementById("next_one");
+						var next_ten_btn = document.getElementById("next_ten");
+					
+						back_ten.disabled = false;
+						back_one.disabled = false;
+						run_btn.disabled = false;
+						next_one.disabled = false;
+						next_ten.disabled = false;
+					}
+				} else {
+					pause_runtime = mode;
+				}
+			}
+
+			function step_b_ten(){
+				var next_step = document.getElementById("num_steps").value - 10;
+				step_to(next_step);
+			}
+			
+			function step_b_one(){
+				var next_step = document.getElementById("num_steps").value - 1;
+				step_to(next_step);
+			}
+			
+			function step_f_one(){
+				var next_step = parseInt(document.getElementById("num_steps").value) + 1;
+
+				if(next_step > count){
+					var num_steps = next_step - count;
+					world_step(num_steps, 0);
+				} else {
+					step_to(next_step);
+				}
+			}
+			
+			function step_f_ten(){
+				var next_step = parseInt(document.getElementById("num_steps").value) + 10;
+				if(next_step > count){
+					var num_steps = next_step - count;
+					world_step(num_steps, 0);
+				} else {
+					step_to(next_step);
+				}
+			}
+	
+			function parse_JSON(world){
+				world_temp.innerHTML = world.outside_temp.toFixed(5);
+				$("td.step").text("Step: " + world.step);
+
+				var sliderRange = document.getElementById("step_slider");
+				var sliderOutput = document.getElementById("num_steps");
+				sliderRange.value = world.step;
+				sliderOutput.value = world.step;
+				
+				for(var i = 0; i < Object.keys(world).length - 2; i++){
+					for(var j = 0; j < Object.keys(world[i]).length; j++){
+						$("td."+i+"-"+j).text(world[i][j].temp.toFixed(3));
+						$("td."+i+"-"+j).css("background-color", world[i][j].color);
+					}
+				}
+			}
+
+			function increment_slider_max(){
+				var n_max = parseInt(document.getElementById("step_slider").max) + 1;
+			
+				$("#step_slider").prop({
+					'max': n_max
+				});
+
+				$("#step_slider").val(n_max);
+			}
+
+			var stepSlider = document.getElementById("step_slider"),
+				stepInput = document.getElementById("num_steps");
+
+			stepSlider.oninput = function(){
+				stepInput.value = this.value;
+				step_to(this.value);
+			}
+
+			stepInput.oninput = function(){
+				if(this.value > count){
+					this.value = count;
+				}
+
+				if(!this.value || this.value < 0){
+					this.value = 0;
+				}
+				
+				stepSlider.value = this.value;
+				step_to(this.value);
+			}
+
+		</script>
+		<br>
+
+	</body>
+</html>
